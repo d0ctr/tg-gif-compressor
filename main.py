@@ -20,15 +20,14 @@ async def start(event):
 
 @client.on(events.NewMessage)
 async def handle_message(event: events.NewMessage.Event):
-    if event.message.media:
-        if event.message.document.mime_type == 'image/gif':
+    if event.message.document and event.message.document.mime_type == 'image/gif':
             print("received gif as document")
 
             async with client.action(event.chat_id, "video") as action:
                 file_path = await client.download_media(event.message.document, f"{event.message.document.id}.gif")
                 output_path = f"{file_path}.mp4"
 
-                print("converting")
+                print(f"converting {event.message.document.id}")
                 convert_gif_to_mp4(file_path, output_path)
 
                 print("sending")
