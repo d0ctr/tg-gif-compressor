@@ -9,6 +9,8 @@ api_id = os.getenv('API_ID')
 api_hash = os.getenv('API_HASH')
 bot_token = os.getenv('TELEGRAM_TOKEN')
 
+bot_username = None
+
 dev_null = open(os.devnull, 'w')
 
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
@@ -16,6 +18,17 @@ client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
+    # Get the message text
+    message_text = event.message.text
+    
+    if message_text.startswith('/start@'):
+
+        command = message_text.split(' ', 1)[0] # `/start@... ...` -> `/start@...`
+        mentioned_username = command.split('@', 1)[1] # `/start@...` -> `...`
+
+        if mentioned_username.lower() != bot_username.lower():
+            return
+    
     await event.reply('Если я вдруг получу ещё одну гифку как документ, клянусь, я потеряю терпение')
 
 @client.on(events.NewMessage)
@@ -41,8 +54,14 @@ def convert_gif_to_mp4(input: str, output: str):
     ffmpeg.run()
 
 async def main():
+    global bot_username
+    
     await client.start(bot_token=bot_token)
-    print("Bot is running...")
+    
+    me = await client.get_me()
+    bot_username = me.username
+    
+    print(f"Bot is running as @{bot_username}...")
     await client.run_until_disconnected()
 
 loop = asyncio.get_event_loop()
