@@ -1,23 +1,23 @@
-FROM python:3.9-slim
+FROM golang
 
-# Install ffmpeg
-RUN apt update && apt install -y ffmpeg && apt clean
+RUN apt update && apt upgrade -y
+RUN apt install -y ffmpeg wget
 
-# Set the working directory
-WORKDIR /app
+WORKDIR /opt/app
 
-# Copy the requirements file and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN wget https://github.com/FallenProjects/tdlib-build/releases/download/v1.8.64/TDLib-tdjson-linux-x86_64.tar.gz &&\
+        tar -xvf TDLib-tdjson-linux-x86_64.tar.gz &&\
+        rm TDLib-tdjson-linux-x86_64.tar.gz
 
-# Copy the bot script
-COPY main.py .
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Expose the port the app runs on
-EXPOSE 80
+COPY . .
+RUN go build -o bot
 
 ENV API_ID=
 ENV API_HASH=
 ENV TELEGRAM_TOKEN=
+ENV TDLIB_PATH=/opt/app/libtdjson.so.1.8.64
 
-CMD ["python", "./main.py"]
+CMD ["./bot"]
